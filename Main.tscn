@@ -1,0 +1,118 @@
+[gd_scene load_steps=16 format=3 uid="uid://cd0dd7dp8pxnc"]
+
+[ext_resource type="Script" uid="uid://1t6l3l3yn4fl" path="res://player.gd" id="1_glv2v"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_uu6xs"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_r0du0"]
+custom_aabb = AABB(0, 1, 0, 0, 0, 0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uu6xs"]
+albedo_color = Color(1, 0.231373, 1, 1)
+
+[sub_resource type="Curve3D" id="Curve3D_cm0pq"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_r0du0"]
+size = Vector2(3, 100)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cm0pq"]
+albedo_color = Color(0.58, 0.4814, 0.58, 1)
+
+[sub_resource type="Curve3D" id="Curve3D_3dxm6"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_lgr22"]
+size = Vector2(3, 100)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trn2v"]
+albedo_color = Color(0.16, 0.16, 0.16, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_uu6xs"]
+size = Vector3(3, 1, 1)
+
+[sub_resource type="Curve3D" id="Curve3D_uu6xs"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_cm0pq"]
+size = Vector2(3, 100)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fos0i"]
+albedo_color = Color(0.32, 0.32, 0.32, 1)
+
+[sub_resource type="GDScript" id="GDScript_glv2v"]
+script/source = "extends Node3D
+
+@export var obstacle_scene: PackedScene
+
+@onready var timer = $Timer
+var lane_positions = [-2.0, 0.0, 2.0]
+
+func _ready():
+	timer.timeout.connect(_on_timer_timeout)
+
+func _on_timer_timeout():
+	if obstacle_scene:
+		var obstacle = obstacle_scene.instantiate()
+		var lane_x = lane_positions.pick_random()
+		obstacle.position = Vector3(lane_x, 0.0, 20.0)
+		add_child(obstacle)
+"
+
+[node name="XROrigin3D" type="XROrigin3D"]
+
+[node name="Player" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+script = ExtResource("1_glv2v")
+
+[node name="TestCamera" type="XRCamera3D" parent="Player"]
+transform = Transform3D(0.999996, -0.00286233, 0, 0.00286233, 0.999996, 0, 0, 0, 1, 0, -1, 0)
+fov = 74.2642
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_uu6xs")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Player"]
+mesh = SubResource("CapsuleMesh_r0du0")
+surface_material_override/0 = SubResource("StandardMaterial3D_uu6xs")
+
+[node name="GroundContainer" type="Node3D" parent="."]
+
+[node name="LaneLeft" type="Path3D" parent="GroundContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0)
+curve = SubResource("Curve3D_cm0pq")
+
+[node name="PathFollow3D" type="PathFollow3D" parent="GroundContainer/LaneLeft"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="GroundContainer/LaneLeft/PathFollow3D"]
+mesh = SubResource("PlaneMesh_r0du0")
+surface_material_override/0 = SubResource("StandardMaterial3D_cm0pq")
+
+[node name="LaneRight" type="Path3D" parent="GroundContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
+curve = SubResource("Curve3D_3dxm6")
+
+[node name="PathFollow3D" type="PathFollow3D" parent="GroundContainer/LaneRight"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="GroundContainer/LaneRight/PathFollow3D"]
+mesh = SubResource("PlaneMesh_lgr22")
+surface_material_override/0 = SubResource("StandardMaterial3D_trn2v")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="GroundContainer"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GroundContainer/StaticBody3D"]
+shape = SubResource("BoxShape3D_uu6xs")
+
+[node name="LaneCenter" type="Path3D" parent="GroundContainer"]
+curve = SubResource("Curve3D_uu6xs")
+
+[node name="PathFollow3D" type="PathFollow3D" parent="GroundContainer/LaneCenter"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="GroundContainer/LaneCenter/PathFollow3D"]
+mesh = SubResource("PlaneMesh_cm0pq")
+surface_material_override/0 = SubResource("StandardMaterial3D_fos0i")
+
+[node name="ObstacleSpawner" type="Node3D" parent="."]
+script = SubResource("GDScript_glv2v")
+
+[node name="Timer" type="Timer" parent="ObstacleSpawner"]
+wait_time = 1.5
+autostart = true
